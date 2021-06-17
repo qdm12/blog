@@ -1,11 +1,12 @@
 ---
 title: Contact
-featured_image: "images/featured_image.jpg"
-omit_header_text: true
-description:
+ShowToc: false
+comments: false
 type: page
 menu: main
 
 ---
+
+![Title](../images/featured_image.jpg)
 
 Send me an email at [quentin.mcgaw@gmail.com](mailto:quentin.mcgaw@gmail.com) 📧
