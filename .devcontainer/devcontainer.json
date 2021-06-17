@@ -8,6 +8,7 @@
     "workspaceFolder": "/workspace",
     // "overrideCommand": "",
     "extensions": [
+        "redhat.vscode-yaml",
         "IBM.output-colorizer",
         "eamodio.gitlens",
         "mhutchie.git-graph",
