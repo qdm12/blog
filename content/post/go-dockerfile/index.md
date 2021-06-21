@@ -118,7 +118,7 @@ COPY pkg/ ./pkg/
 1. We install `g++` for running the [Go race detector](https://blog.golang.org/race-detector) in our tests (see the [`test` stage](#The-`test`-stage)).
 1. 🚨 We set `ENV CGO_ENABLED=0` to build static binaries and not musl dynamically linked binaries! Sadly, a lot of developers are not aware of this important detail.
 1. We install `golangci-lint` which will be used in the `lint` stage downstream.
-1. We install `xcpustranslate` from `qmcgaw/xcputranslate` which will be used in the `build` stage downstream.
+1. We install `xcpustranslate` from `qmcgaw/xcputranslate:v0.4.0` which will be used in the `build` stage downstream.
 1. Since we are modern humans and use Go modules in our project, we use `/tmp/build` as our working directory.
 1. We copy `go.mod` and `go.sum` only first, in order to download the Go dependencies. Since these two files should change way less than the rest of the Go codebase, this has the advantage of not having to re-install dependencies every time some code is changed, thanks to Docker's layer caching mechanism.
 1. We finally copy the rest of our code, which should reside in the directories `cmd`, `internal` and `pkg` if you follow a clean Go project structure.

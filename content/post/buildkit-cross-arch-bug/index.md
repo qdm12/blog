@@ -55,7 +55,7 @@ The Dockerfile above would be changed to:
 FROM --platform=$BUILDPLATFORM golang:1.16-alpine3.13 AS builder
 ENV CGO_ENABLED=0
 RUN apk add --no-cache git
-COPY --from=qmcgaw/xcputranslate /xcputranslate /usr/local/bin/xcputranslate
+COPY --from=qmcgaw/xcputranslate:v0.4.0 /xcputranslate /usr/local/bin/xcputranslate
 WORKDIR /tmp/build
 COPY go.mod go.sum
 RUN go mod download
@@ -66,12 +66,12 @@ RUN GOARCH="$(xcputranslate -targetplatform ${TARGETPLATFORM} -language golang -
     go build
 ```
 
-That works well, pulling the right binary depending on your build platform using the `qmcgaw/xcputranslate` image.
+That works well, pulling the right binary depending on your build platform using the `qmcgaw/xcputranslate:v0.4.0` image.
 
 Now there seems to be a bug with buildkit, where the
 
 ```Dockerfile
-COPY --from=qmcgaw/xcputranslate /xcputranslate /usr/local/bin/xcputranslate
+COPY --from=qmcgaw/xcputranslate:v0.4.0 /xcputranslate /usr/local/bin/xcputranslate
 ```
 
 actually breaks the common build, and from this instruction, it will run N times for the N target platforms.
