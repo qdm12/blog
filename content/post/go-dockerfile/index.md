@@ -23,12 +23,14 @@ ARG BUILDPLATFORM=linux/amd64
 ARG ALPINE_VERSION=3.13
 ARG GO_VERSION=1.16
 
+FROM --platform=$BUILDPLATFORM qmcgaw/xcputranslate:v0.4.0 AS xcputranslate
+
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
 RUN apk --update add git g++
 ENV CGO_ENABLED=0
 ARG GOLANGCI_LINT_VERSION=v1.40.1
 RUN go get github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION} 2>&1
-COPY --from=qmcgaw/xcputranslate:v0.4.0 /xcputranslate /usr/local/bin/xcputranslate
+COPY --from=xcputranslate /xcputranslate /usr/local/bin/xcputranslate
 WORKDIR /tmp/build
 COPY go.mod go.sum ./
 RUN go mod download
@@ -104,7 +106,7 @@ RUN apk --update add git g++
 ENV CGO_ENABLED=0
 ARG GOLANGCI_LINT_VERSION=v1.40.1
 RUN go get github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION} 2>&1
-COPY --from=qmcgaw/xcputranslate:v0.4.0 /xcputranslate /usr/local/bin/xcputranslate
+COPY --from=xcputranslate /xcputranslate /usr/local/bin/xcputranslate
 WORKDIR /tmp/build
 COPY go.mod go.sum ./
 RUN go mod download
@@ -118,7 +120,7 @@ COPY pkg/ ./pkg/
 1. We install `g++` for running the [Go race detector](https://blog.golang.org/race-detector) in our tests (see the [`test` stage](#The-`test`-stage)).
 1. 🚨 We set `ENV CGO_ENABLED=0` to build static binaries and not musl dynamically linked binaries! Sadly, a lot of developers are not aware of this important detail.
 1. We install `golangci-lint` which will be used in the `lint` stage downstream.
-1. We install `xcpustranslate` from `qmcgaw/xcputranslate:v0.4.0` which will be used in the `build` stage downstream.
+1. We install `xcpustranslate` from `qmcgaw/xcputranslate:v0.4.0` aliased as `xcputranslate` ([why we do this](../buildkit-cross-arch-bug)) which will be used in the `build` stage downstream.
 1. Since we are modern humans and use Go modules in our project, we use `/tmp/build` as our working directory.
 1. We copy `go.mod` and `go.sum` only first, in order to download the Go dependencies. Since these two files should change way less than the rest of the Go codebase, this has the advantage of not having to re-install dependencies every time some code is changed, thanks to Docker's layer caching mechanism.
 1. We finally copy the rest of our code, which should reside in the directories `cmd`, `internal` and `pkg` if you follow a clean Go project structure.

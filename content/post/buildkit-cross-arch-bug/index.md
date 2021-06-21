@@ -88,6 +88,20 @@ N times, although these are exactly the same.
 
 ## Workarounds
 
+### Name the image
+
+Funnily enough, you can solve the issue by simply adding:
+
+```Dockerfile
+FROM --from=${BUILDPLATFORM} qmcgaw/xcputranslate:v0.4.0 AS xcputranslate
+```
+
+And then change the `COPY` instruction to:
+
+```Dockerfile
+COPY --from=xcputranslate /xcputranslate /usr/local/bin/xcputranslate
+```
+
 ### COPY later
 
 The easiest workaround is to copy the (less than 2MB) binary right before `ARG TARGETPLATFORM`, so that only the COPY instruction is ran N times.
