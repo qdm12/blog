@@ -202,4 +202,4 @@ If you build your own program, you should also make sure it is compatible with t
 
 Finally, since building images for other target CPU architectures run with an emulation layer (qemu), this can be quite slower than building natively. For languages allowing you to cross build natively such as Go or Rust, you should instead build your binaries on the build platform without emulation.
 
-ℹ️ [How to cross build Docker images with Go programs using the Go toolchain](cross-cpu-docker-images-using-go)
+ℹ️ [How to cross build Docker images with Go programs using the Go toolchain](../cross-cpu-docker-images-using-go)

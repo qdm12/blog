@@ -455,6 +455,6 @@ It is heavily optimized for caching and rebuilds should be very fast, especially
 
 It also has decoupled stages, which can also run in parallel if you use buildkit.
 
-Finally, it is designed to cross CPU build Docker images, you might be interested in the [Cross CPU Docker images using Go](/cross-cpu-docker-images-using-go) post.
+Finally, it is designed to cross CPU build Docker images, you might be interested in the [Cross CPU Docker images using Go](../cross-cpu-docker-images-using-go) post.
 
 Enjoy your `docker build`! 😊
