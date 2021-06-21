@@ -157,18 +157,18 @@ That way it removes a lot of potential horribly nested shell scripting in your D
 Use it in your Dockerfile like so:
 
 ```Dockerfile
-FROM --platform=$BUILDPLATFORM qmcgaw/xcputranslate:v0.4.0 AS xcputranslate
+FROM --platform=$BUILDPLATFORM qmcgaw/xcputranslate:v0.6.0 AS xcputranslate
 
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS gobuilder
 COPY --from=xcputranslate /xcputranslate /usr/local/bin/xcputranslate
 WORKDIR /tmp/build
 COPY main.go .
-RUN GOARCH="$(xcputranslate -targetplatform ${TARGETPLATFORM}  -language golang -field arch)" \
-    GOARM="$(xcputranslate -targetplatform ${TARGETPLATFORM} -language golang -field arm)" \
+RUN GOARCH="$(xcputranslate translate -targetplatform ${TARGETPLATFORM}  -language golang -field arch)" \
+    GOARM="$(xcputranslate translate -targetplatform ${TARGETPLATFORM} -language golang -field arm)" \
     go build -o app
 ```
 
-💁 Note that `FROM --platform=$BUILDPLATFORM qmcgaw/xcputranslate:v0.4.0 AS xcputranslate` pulls the binary for your build platform automagically, since there is an image built for each CPU architecture.
+💁 Note that `FROM --platform=$BUILDPLATFORM qmcgaw/xcputranslate:v0.6.0 AS xcputranslate` pulls the binary for your build platform automagically, since there is an image built for each CPU architecture.
 
 😢 Also note you cannot set `GOARCH` or `GOARM` as `ENV` or `ARG` in your Dockerfile since these are dynamically evaluated at build time.
 
@@ -182,14 +182,14 @@ ARG ALPINE_VERSION=3.13
 
 ARG BUILDPLATFORM=linux/amd64
 
-FROM --platform=$BUILDPLATFORM qmcgaw/xcputranslate:v0.4.0 AS xcputranslate
+FROM --platform=$BUILDPLATFORM qmcgaw/xcputranslate:v0.6.0 AS xcputranslate
 
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS gobuilder
 COPY --from=xcputranslate /xcputranslate /usr/local/bin/xcputranslate
 WORKDIR /tmp/build
 COPY main.go .
-RUN GOARCH="$(xcputranslate -targetplatform ${TARGETPLATFORM}  -language golang -field arch)" \
-    GOARM="$(xcputranslate -targetplatform ${TARGETPLATFORM} -language golang -field arm)" \
+RUN GOARCH="$(xcputranslate translate -targetplatform ${TARGETPLATFORM}  -language golang -field arch)" \
+    GOARM="$(xcputranslate translate -targetplatform ${TARGETPLATFORM} -language golang -field arm)" \
     go build -o app
 
 FROM alpine:${ALPINE_VERSION}
