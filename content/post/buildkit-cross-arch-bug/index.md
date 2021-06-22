@@ -1,5 +1,5 @@
 ---
-title: "Buildkit cross architecture building bug"
+title: "Buildkit cross architecture building bug... or feature?"
 description: ""
 date: 2021-06-20T11:00:00-06:00
 tags: ["docker", "dockerfile", "cross cpu", "buildkit"]
@@ -8,8 +8,8 @@ tags: ["docker", "dockerfile", "cross cpu", "buildkit"]
 
 `buildkit` is now included with Docker Desktop and the Docker `buildx` plugin.
 
-We can now build an image for multiple CPU architectures by using the flag `--platform` in our `docker buildx build` command.
-For example `--platform=linux/amd64,linux/arm64`.
+We can now build an image for multiple CPU architectures by using the flag `--platform` in the `docker buildx build` command.
+For example `docker buildx build --platform=linux/amd64,linux/arm64 .`.
 
 You can however keep on using the native build platform by using the `--platform=${BUILDPLATFORM}` flag in your Dockerfile's `FROM` instruction.
 
@@ -47,7 +47,7 @@ If you do not have Docker layer caching, which is usually the case on CIs, this 
 
 ## Bug
 
-Now in my particular situation, I have development a small program called [`xcputranslate`](https://github.com/qdm12/xcputranslate) to convert strings such as `linux/arm/v7` to `arm` and `7` for `GOARCH` and `GOARM` for go builds, without relying on shell scripting. The static binary program is built for every architecture and pushed in a scratch based image on Docker Hub as `qmcgaw/xcputranslate`.
+Now in my particular situation, I have developed a small program called [`xcputranslate`](https://github.com/qdm12/xcputranslate) to convert strings such as `linux/arm/v7` to `arm` and `7` for `GOARCH` and `GOARM` for go builds, without relying on shell scripting. The static binary program is built for every architecture and pushed in a scratch based image on Docker Hub as `qmcgaw/xcputranslate`.
 
 The Dockerfile above would be changed to:
 
@@ -66,15 +66,12 @@ RUN GOARCH="$(xcputranslate translate -targetplatform ${TARGETPLATFORM} -languag
     go build
 ```
 
-That works well, pulling the right binary depending on your build platform using the `qmcgaw/xcputranslate:v0.6.0` image.
-
-Now there seems to be a bug with buildkit, where the
+That works well, but it seemed buildkit was breaking the common build platform build in N parallel builds for the N target platforms from:
 
 ```Dockerfile
 COPY --from=qmcgaw/xcputranslate:v0.6.0 /xcputranslate /usr/local/bin/xcputranslate
 ```
 
-actually breaks the common build, and from this instruction, it will run N times for the N target platforms.
 That means it will run:
 
 ```Dockerfile
@@ -84,13 +81,36 @@ RUN go mod download
 COPY . .
 ```
 
-N times, although these are exactly the same.
+N times, and I thought it was doing the exact same thing N times.
 
-## Workarounds
+## Enter the rabbit hole
 
-### Name the image
+I thought the `COPY` instruction was copying the binary matching the stage running platform (`${BUILDPLATFORM}` in our case).
 
-Funnily enough, you can solve the issue by simply adding:
+So if we are running:
+
+```Dockerfile
+FROM --platform=linux/amd64 golang:1.16-alpine3.13 AS builder
+# ...
+COPY --from=qmcgaw/xcputranslate:v0.6.0 /xcputranslate /usr/local/bin/xcputranslate
+RUN xcputranslate --help
+```
+
+It seemed obvious to me `xcputranslate` was the binary from the `linux/amd64` image and not the target platform image.
+You cannot run an `arm` binary on an `amd64` stage... It turned out that buildkit was *ahead of its time!*
+
+I have exchanged with [tonistiigi](https://github.com/tonistiigi) on [Docker's buildkit Slack](https://dockercommunity.slack.com/archives/C7S7A40MP/p1623804144116300) for a few days to clarify all this.
+
+With buildkit, `COPY` pulls **from the target platform** image and not from the platform of the stage.
+And buildkit is clever enough to detect this and split the build N times, with an emulation for each parallel build.
+
+Now the state of my Dockerfile was thus terrible since I was running not only the N parallel builds, but on top of that they were emulated, making the overall build slowww...
+
+## Solution
+
+The solution is actually quite simple.
+
+In my case, I just had to **alias the image** by specifying the `--from` with the `BUILDPLATFORM`
 
 ```Dockerfile
 FROM --from=${BUILDPLATFORM} qmcgaw/xcputranslate:v0.6.0 AS xcputranslate
@@ -102,23 +122,8 @@ And then change the `COPY` instruction to:
 COPY --from=xcputranslate /xcputranslate /usr/local/bin/xcputranslate
 ```
 
-### COPY later
+That made my Docker cross builds much quicker and efficient, only splitting the build in N emulated parallel builds when reaching the `ARG TARGETPLATFORM` instruction.
 
-The easiest workaround is to copy the (less than 2MB) binary right before `ARG TARGETPLATFORM`, so that only the COPY instruction is ran N times.
+🎉🎉🎉 Success!!! 🎉🎉🎉
 
-The tiny issue is that xcputranslate will not be cached in the build if you have layer caching enabled, since it's after the COPY of the source code.
-
-### Download the binary
-
-Another workaround is to not use `COPY` but instead download the binary using for example:
-
-```Dockerfile
-RUN wget -qO /usr/local/bin/xcputranslate https://github.com/qdm12/xcputranslate/releases/download/v0.5.0/xcputranslate_0.5.0_linux_amd64 && \
-    chmod 500 /usr/local/bin/xcputranslate
-```
-
-This works well for caching purposes, but you have to manage to specify the right build platform when downloading the binary without `xcputranslate`.
-
-## Solution
-
-Waiting on it 😄
+Special thanks to [tonistiigi](https://github.com/tonistiigi) for his help!
