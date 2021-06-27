@@ -4,4 +4,4 @@ public/
 .gitignore
 Dockerfile
 README.md
-**.todo
+**/*.todo
