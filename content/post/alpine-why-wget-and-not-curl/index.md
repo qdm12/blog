@@ -100,3 +100,9 @@ Supporting all the features of `curl` would result in a much larger multi-call b
 ### Security
 
 There may also be a security aspect to it, since `curl` offers so many protocols and features, it is a harder piece to keep secured than `wget`.
+
+EDIT (2021-07-02): It turns out that, as [@tianon](https://github.com/tianon) very well says it:
+
+> I mean, yes, but also very much no: [#80](https://github.com/docker-library/busybox/issues/80) (TLS validation is Broken-By-Design)
+
+🤯🤯🤯🤯🤯
