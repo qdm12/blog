@@ -24,7 +24,7 @@ You will usually specify the `TARGETPLATFORM` argument further down in the Docke
 For example, for Go programs, you would have:
 
 ```Dockerfile
-FROM --platform=$BUILDPLATFORM golang:1.16-alpine3.13 AS builder
+FROM --platform=${BUILDPLATFORM} golang:1.16-alpine3.13 AS builder
 ENV CGO_ENABLED=0
 RUN apk add --no-cache git
 WORKDIR /tmp/build
@@ -52,7 +52,7 @@ Now in my particular situation, I have developed a small program called [`xcputr
 The Dockerfile above would be changed to:
 
 ```Dockerfile
-FROM --platform=$BUILDPLATFORM golang:1.16-alpine3.13 AS builder
+FROM --platform=${BUILDPLATFORM} golang:1.16-alpine3.13 AS builder
 ENV CGO_ENABLED=0
 RUN apk add --no-cache git
 COPY --from=qmcgaw/xcputranslate:v0.6.0 /xcputranslate /usr/local/bin/xcputranslate
@@ -110,7 +110,7 @@ Now the state of my Dockerfile was thus terrible since I was running not only th
 
 The solution is actually quite simple.
 
-In my case, I just had to **alias the image** by specifying the `--from` with the `BUILDPLATFORM`
+In my case, I just had to **alias the image** by specifying the `--from` with the `${BUILDPLATFORM}`
 
 ```Dockerfile
 FROM --from=${BUILDPLATFORM} qmcgaw/xcputranslate:v0.6.0 AS xcputranslate

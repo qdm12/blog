@@ -23,9 +23,9 @@ ARG BUILDPLATFORM=linux/amd64
 ARG ALPINE_VERSION=3.13
 ARG GO_VERSION=1.16
 
-FROM --platform=$BUILDPLATFORM qmcgaw/xcputranslate:v0.6.0 AS xcputranslate
+FROM --platform=${BUILDPLATFORM} qmcgaw/xcputranslate:v0.6.0 AS xcputranslate
 
-FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
+FROM --platform=${BUILDPLATFORM} golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
 RUN apk --update add git g++
 ENV CGO_ENABLED=0
 ARG GOLANGCI_LINT_VERSION=v1.40.1
@@ -67,7 +67,7 @@ RUN GOARCH="$(xcputranslate translate -targetplatform=${TARGETPLATFORM} -field a
     -X 'main.commit=$COMMIT' \
     " -o app cmd/app/main.go
 
-FROM --platform=$BUILDPLATFORM alpine:${ALPINE_VERSION} AS alpine
+FROM --platform=${BUILDPLATFORM} alpine:${ALPINE_VERSION} AS alpine
 RUN apk --update add ca-certificates tzdata
 
 FROM scratch
@@ -101,7 +101,7 @@ COPY --from=build --chown=1000 /tmp/build/app /app
 The base stage consists in setting up the Go environment with our code and dependencies such that it can be used by other stages downstream.
 
 ```Dockerfile
-FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
+FROM --platform=${BUILDPLATFORM} golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
 RUN apk --update add git g++
 ENV CGO_ENABLED=0
 ARG GOLANGCI_LINT_VERSION=v1.40.1
@@ -115,7 +115,7 @@ COPY internal/ ./internal/
 COPY pkg/ ./pkg/
 ```
 
-1. We start from the official Golang Alpine image because it's smaller. Note we use `--platform=$BUILDPLATFORM` so that we build using the native platform. We can still cross build though, as you will see later.
+1. We start from the official Golang Alpine image because it's smaller. Note we use `--platform=${BUILDPLATFORM}` so that we build using the native platform. We can still cross build though, as you will see later.
 1. We install `git` which is needed for `go mod` operations.
 1. We install `g++` for running the [Go race detector](https://blog.golang.org/race-detector) in our tests (see the [`test` stage](#The-`test`-stage)).
 1. 🚨 We set `ENV CGO_ENABLED=0` to build static binaries and not musl dynamically linked binaries! Sadly, a lot of developers are not aware of this important detail.
@@ -284,7 +284,7 @@ Finally the output flag `-o app` is set so the binary is written to `./app` to a
 That stage is a bit of a strange one.
 
 ```Dockerfile
-FROM --platform=$BUILDPLATFORM alpine:${ALPINE_VERSION} AS alpine
+FROM --platform=${BUILDPLATFORM} alpine:${ALPINE_VERSION} AS alpine
 RUN apk --update add ca-certificates tzdata
 ```
 

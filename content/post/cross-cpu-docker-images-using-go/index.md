@@ -92,7 +92,7 @@ The `BUILDPLATFORM` build argument is injected by `docker build` when cross buil
 
 It is the CPU architecture you are building on, for example `linux/amd64`.
 
-Modify your Dockerfile by adding `ARG BUILDPLATFORM=linux/amd4` as well as `--platform=$BUILDPLATFORM` between the `FROM` and the image name for our Go builder stage.
+Modify your Dockerfile by adding `ARG BUILDPLATFORM=linux/amd4` as well as `--platform=${BUILDPLATFORM}` between the `FROM` and the image name for our Go builder stage.
 
 Your Dockerfile should look like:
 
@@ -101,7 +101,7 @@ Your Dockerfile should look like:
 
 ARG BUILDPLATFORM=linux/amd64
 
-FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS gobuilder
+FROM --platform=${BUILDPLATFORM} golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS gobuilder
 # ...
 ```
 
@@ -128,7 +128,7 @@ Your Dockerfile should look like:
 ```Dockerfile
 # ...
 
-FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS gobuilder
+FROM --platform=${BUILDPLATFORM} golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS gobuilder
 WORKDIR /tmp/build
 ARG TARGETPLATFORM
 # ...
@@ -157,9 +157,9 @@ That way it removes a lot of potential horribly nested shell scripting in your D
 Use it in your Dockerfile like so:
 
 ```Dockerfile
-FROM --platform=$BUILDPLATFORM qmcgaw/xcputranslate:v0.6.0 AS xcputranslate
+FROM --platform=${BUILDPLATFORM} qmcgaw/xcputranslate:v0.6.0 AS xcputranslate
 
-FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS gobuilder
+FROM --platform=${BUILDPLATFORM} golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS gobuilder
 COPY --from=xcputranslate /xcputranslate /usr/local/bin/xcputranslate
 WORKDIR /tmp/build
 COPY main.go .
@@ -168,7 +168,7 @@ RUN GOARCH="$(xcputranslate translate -targetplatform ${TARGETPLATFORM}  -langua
     go build -o app
 ```
 
-💁 Note that `FROM --platform=$BUILDPLATFORM qmcgaw/xcputranslate:v0.6.0 AS xcputranslate` pulls the binary for your build platform automagically, since there is an image built for each CPU architecture.
+💁 Note that `FROM --platform=${BUILDPLATFORM} qmcgaw/xcputranslate:v0.6.0 AS xcputranslate` pulls the binary for your build platform automagically, since there is an image built for each CPU architecture.
 
 😢 Also note you cannot set `GOARCH` or `GOARM` as `ENV` or `ARG` in your Dockerfile since these are dynamically evaluated at build time.
 
@@ -182,9 +182,9 @@ ARG ALPINE_VERSION=3.13
 
 ARG BUILDPLATFORM=linux/amd64
 
-FROM --platform=$BUILDPLATFORM qmcgaw/xcputranslate:v0.6.0 AS xcputranslate
+FROM --platform=${BUILDPLATFORM} qmcgaw/xcputranslate:v0.6.0 AS xcputranslate
 
-FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS gobuilder
+FROM --platform=${BUILDPLATFORM} golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS gobuilder
 COPY --from=xcputranslate /xcputranslate /usr/local/bin/xcputranslate
 WORKDIR /tmp/build
 COPY main.go .

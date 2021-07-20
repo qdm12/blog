@@ -2,7 +2,7 @@ ARG BUILDPLATFORM=linux/amd64
 
 ARG ALPINE_VERSION=3.13
 
-FROM --platform=$BUILDPLATFORM alpine:${ALPINE_VERSION} AS hugo
+FROM --platform=${BUILDPLATFORM} alpine:${ALPINE_VERSION} AS hugo
 WORKDIR /tmp/hugo
 RUN apk add --no-cache hugo
 ENV HUGO_ENV=production
