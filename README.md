@@ -18,6 +18,14 @@ You can build the Docker image locally with
 docker build -t qmcgaw/blog .
 ```
 
+## Run it
+
+You can run it with the [docker-compose.yml](docker-compose.yml) provided or with:
+
+```sh
+docker run -it --rm -p 8000:8000/tcp qmcgaw/blog
+```
+
 ## Features
 
 The Docker image is based on [qmcgaw/srv](https://github.com/qdm12/srv) which has [several features](https://github.com/qdm12/srv#features) such as Prometheus metrics.

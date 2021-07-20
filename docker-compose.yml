@@ -1,0 +1,10 @@
+version: '3'
+services:
+  blog:
+    image: qmcgaw/blog
+    container_name: blog
+    ports:
+      - 8000:8000/tcp
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    restart: always
