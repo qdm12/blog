@@ -7,9 +7,11 @@ tags: ["go", "errors"]
 
 In a hurry 🏃? [**Jump to the conclusion**](#Conclusion)
 
+![Title](title.svg)
+
 It took me months if not years to figure out the best way to wrap errors in Go.
 
-This was even more critical when developing public Go API where a user should be able to check for your errors.
+This was even more critical when developing public Go APIs where a user should be able to check for your (returned) errors.
 
 ## Global variables and errors
 
