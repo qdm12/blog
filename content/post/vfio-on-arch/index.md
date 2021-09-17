@@ -445,7 +445,7 @@ Fortunately for me, I managed to buy an RTX 3070 in those dark times of early 20
 I thus decided to upgrade my GTX 1660 Super to my RTX 3070 so I could play in 1440p better or even in 4k 30fps
 if the bandwidth allows it, such as inside my LAN in my living room.
 
-We assume you have **the same prequisites and configuration** from [Part 1](#Part-1:-initial-setup)
+We assume you have **the same prequisites and configuration** from [Part 1](#part-1:-initial-setup)
 
 ### Cleanup
 

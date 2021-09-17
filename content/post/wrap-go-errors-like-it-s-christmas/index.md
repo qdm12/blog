@@ -5,7 +5,7 @@ date: 2021-09-15T15:00:00-06:00
 tags: ["go", "errors"]
 ---
 
-In a hurry 🏃? [**Jump to the conclusion**](#Conclusion)
+In a hurry 🏃? [**Jump to the conclusion**](#conclusion)
 
 ![Title](title.svg)
 
@@ -35,7 +35,7 @@ We take this approach for:
 
 - Clarity, where you usually define all the errors at the top of your Go file
 - Performance, since this will not create the error every time the code path is hit
-- Callers to be able to examine the returned error and programmatically check which one it is (see the [Wrap errors section](#Wrap-errors))
+- Callers to be able to examine the returned error and programmatically check which one it is (see the [Wrap errors section](#wrap-errors))
 
 ## Return a new error
 

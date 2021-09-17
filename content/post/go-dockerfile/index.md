@@ -117,7 +117,7 @@ COPY pkg/ ./pkg/
 
 1. We start from the official Golang Alpine image because it's smaller. Note we use `--platform=${BUILDPLATFORM}` so that we build using the native platform. We can still cross build though, as you will see later.
 1. We install `git` which is needed for `go mod` operations.
-1. We install `g++` for running the [Go race detector](https://blog.golang.org/race-detector) in our tests (see the [`test` stage](#The-`test`-stage)).
+1. We install `g++` for running the [Go race detector](https://blog.golang.org/race-detector) in our tests (see the [`test` stage](#the-`test`-stage)).
 1. 🚨 We set `ENV CGO_ENABLED=0` to build static binaries and not musl dynamically linked binaries! Sadly, a lot of developers are not aware of this important detail.
 1. We install `golangci-lint` which will be used in the `lint` stage downstream.
 1. We install `xcpustranslate` from `qmcgaw/xcputranslate:v0.6.0` aliased as `xcputranslate` ([why we do this](../buildkit-cross-arch-bug)) which will be used in the `build` stage downstream.
