@@ -23,7 +23,7 @@ I wanted to setup a Windows 10 virtual machine with GPU passthrough such that:
 
 For reference, my configuration is:
 
-- Host OS: `Linux zenarch 5.7.7-arch1-1 #1 SMP PREEMPT Wed, 01 Jul 2020 14:53:16 +0000 x86_64 GNU/Linux`
+- Host OS: `Linux zenarch 5.14.16-arch1-1 #1 SMP PREEMPT Tue, 02 Nov 2021 22:22:59 +0000 x86_64 GNU/Linux` (post updated from kernel `5.7.7`, 2020-07-01)
 - CPU: AMD Ryzen 2600x
 - Motherboard: ASUS Strix X470-I
 - GPU: MSI GTX 1660 Super
@@ -237,44 +237,14 @@ We need to bind all devices of the IOMMU Group `15` to the VFIO PCI driver at bo
 1. Install necessary packages
 
     ```sh
-    pacman -Sy qemu edk2-ovmf ebtables dnsmasq
+    pacman -Sy --no-confirm qemu libvirt virt-install edk2-ovmf dnsmasq
     ```
 
-1. Setup `yay` to install AUR packages:
-
-    ```sh
-    # Setting up non root user for yay
-    useradd -m nonroot
-    mkdir -p /etc/sudoers.d
-    echo nonroot ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/nonroot
-    chmod 0440 /etc/sudoers.d/nonroot
-
-    # Installing yay
-    originPath="$(pwd)"
-    mkdir /tmp/yay
-    cd /tmp/yay
-    git clone --single-branch --depth 1 https://aur.archlinux.org/yay.git .
-    pacman -Sy -q --needed --noconfirm go
-    mkdir -p /home/nonroot/.cache
-    chown -R nonroot /tmp/yay /.cache
-    sudo -u nonroot makepkg
-    pacman -R --noconfirm go
-    pacman -U --noconfirm yay*.tar.zst
-    cd "$originPath"
-    rm -r /tmp/yay /home/nonroot/.cache
-    ```
-
-1. Install `downgrade` so we can install the versions we want for some of the packages:
-
-    ```sh
-    su nonroot -c "yay -Sy --noconfirm downgrade"
-    ```
-
-1. Install `libvirt 6.8.0-3` interactively using `downgrade`:
-
-    ```sh
-    downgrade libvirt
-    ```
+    - `qemu` is the  machine emulator and virtualizer
+    - `libvirt` is a wrapper around `qemu` so we can use a user interface to configure the virtual machine
+    - `virt-install` is needed to install the VM using the cockpit web user interface
+    - `edk2-ovmf` so the virtual machine can run an UEFI firmware
+    - `dnsmasq` is needed to configure the network for the virtual machine
 
 1. Enable and start the libvirtd service and its logging component virtlogd.socket
 
@@ -291,35 +261,21 @@ We need to bind all devices of the IOMMU Group `15` to the VFIO PCI driver at bo
 
 ### Virtual machine management GUI
 
-To configure the guest OS, we will use the graphical interface `virt-manager`.
+We will setup the Cockpit Web user interface (by RedHat), which is quite better than the older `virt-manager`.
 
-1. Install `virt-manager 3.1.0-2` (or more) interactively using `downgrade`:
-
-    ```sh
-    downgrade libvirt
-    ```
-
-1. Install `xorg-xauths` to have access to the GUI through SSH.
+1. Install required packages
 
     ```sh
-    pacman -Sy xorg-xauths
+    pacman -S cockpit cockpit-machines udisks2-qt5 packagekit
     ```
 
-1. On your server, modify `/etc/ssh/sshd_config`, add the line `X11Forwarding yes` and restart sshd:
+1. Enable and run the cockpit service
 
     ```sh
-    systemctl restart sshd
+    systemctl enable --now cockpit.socket
     ```
 
-1. On your computer/client, you need to specify the `-X` flag to your SSH connect command to forward X11.
-If you are on Windows, use [MobaXterm](https://mobaxterm.mobatek.net/download.html) in order to have X11 support.
-1. Once you are logged in your server over SSH with X11:
-
-    ```sh
-    virt-manager --no-fork
-    ```
-
-    And wait a few seconds for the GUI to show.
+1. Assuming your server is at `192.168.1.2`, access it at [https://192.168.1.2:9090](https://192.168.1.2:9090) and login using your system credentials, ideally with `root`.
 
 ### Download the Windows 10 iso
 
@@ -331,34 +287,44 @@ If you are on Windows, use [MobaXterm](https://mobaxterm.mobatek.net/download.ht
 
 #### Creating the virtual machine
 
-1. Click on *File*, *New Virtual Machine*
-1. Select *Local Install media (ISO image or CDROM)* and click *Forward*
-1. Browse to your Windows 10 iso file. You may need to create a file directory pool in order to browse to it.
-1. Enter manually the operating system being installed as `Microsoft Windows 10`
-1. Click on *Forward*
-1. Set the memory and CPU to what you desire, ideally 8GB and 4 CPUs at least. Click on *Forward*
-1. Either create a disk image (simpler) or select a custom storage.
-In my case, I added a filesystem directory pool at `/dev` and picked my blank new ssd `/dev/sdd` from it as its custom storage. Click on *Forward*.
-1. Set the name to `win10` for consistency with the following instructions.
-1. Tick *Customize configuration before install*.
-1. Expand the *Network selection* to avoid `virt-manager` to crash 👍
-1. Click *Finish*
-1. In the *Overview* section, change the Firmware to UEFI. In my case it was `UEFI x86_64:/usr/share/edk2-ovmf/x64/OVMF_CODE.fd`. Click *Apply*.
-1. In the *CPUs* section, untick *Copy host CPU configuration* and choose the `host-passthrough` for the *Model*. Click *Apply*.
-1. In the *Boot Options* section, tick the *Enable boot menu* and tick the *SATA CDROM 1* so that it can boot from the windows 10 iso file. Click *Apply*.
-1. Click on **Begin Installation**. A window will open and you can follow Windows installation steps interactively.
+For storage, you can either use a disk image which you can store anywhere you want or use a full disk or partition.
+
+If you want to use a disk, create a storage pool [https://192.168.1.2:9090/machines#/storages](https://192.168.1.2:9090/machines#/storages)
+using the disk, and then create a volume with format `none`.
+
+![create storage pool](createstoragepool.jpg)
+
+Click on the created storage pool and click on **Activate**.
+
+Head to the machine Cockpit web UI at [https://192.168.1.2:9090/machines](https://192.168.1.2:9090/machines) and click on **Create VM** on the right hand side. Set the fields similarly to the below screenshot:
+
+![Create new virtual machine](createnewvirtualmachine.jpg)
+
+Then click on the VM name, here it's `win10`, to show a more detailed menu. This should be at [https://192.168.1.2:9090/machines#vm?name=win10](https://192.168.1.2:9090/machines#vm?name=win10).
+
+- Edit the number of vCPUs from `2` to another number if you want. Ideally set the same amount of threads per core your CPU has physically (usually 2 per core).
+- Edit the CPU type to `host-passthrough`
+- Edit the firmware from `BIOS` to `UEFI`
+- Change the boot order to have the `cdrom` of your ISO before the disk. I personally I had the bug I had to click Install, then force shut down in order for the disc drive to appear in the boot order.
+
+    ![win10 Boot order](bootorder.jpg)
+
+Click on **Install** at the top.
+
+A VNC console screen will appear on the right hand side, click on it and press a key to boot from the ISO file.
+
+You can then follow Windows installation steps interactively.
 
 #### VFIO Windows setup
 
 Once you are done setting up Windows 10, in the virtual machine:
 
-1. Download the [Virtio drivers for Windows 10](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.173-7/virtio-win-gt-x64.msi) and install it.
+1. Download the [Virtio drivers for Windows 10](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.208-1/virtio-win-gt-x64.msi) and install it.
 1. Download the Nvidia/AMD drivers for your graphics card but **do not** install it yet.
-1. Download and install [Parsec](https://parsecgaming.com/).
+1. Download and install [Parsec](https://parsecgaming.com/) as a machine level installation.
 1. Log in to your Parsec account.
-1. **Configure Parsec to start with Windows**.
+1. **Configure Parsec to start with Windows** 
 1. Shut down the virtual machine.
-1. Quit `virt-manager`.
 
 #### Hide the VM
 
@@ -400,37 +366,23 @@ All the following modifications have to be done in the block
 
 #### Add the Graphics card
 
-1. Start `virt-manager`
+1. Go to the cockpit web UI at [https://192.168.1.2:9090](https://192.168.1.2:9090)
+1. Click on the virtual machine *win10* [https://192.168.1.2:9090/machines#vm?name=win10](https://192.168.1.2:9090/machines#vm?name=win10)
+1. Click on the **Add host device** button in the *Host devices* section
+1. Select **PCI** and tick all the devices related to the graphics card. It should be trivial to spot all devices of NVIDIA corporation for example. If you want to ensure these are the right ones, compare their hardware ID on the rightmost column with the ones you got earlier in the IOMMU group.
 
-  ```sh
-  virt-manager --no-fork
-  ```
+    ![Add PCI host device](addhostdevice.jpg)
 
-1. Double click on *win10*
-1. Click on the 💡 icon to show hardware details
-1. For each of the PCI devices in the IOMMU group you want to add:
-    1. Click on *Add Hardware*
-    1. Click on *PCI Host Device*
-    1. Select the device and click on *Finish* (example: `0000:09:00:0 NVIDIA Corporation TU116 [GeForce GTX 1660 Super]`).
-1. Plug a screen on your graphics card 📺 🔌
-1. Start the virtual machine ⏯️
-1. Although nothing moves on your screen, your devices control the virtual machine, you can see it on the physical screen you plugged. Don't worry that will just be to install the graphics drivers 😖 !
-1. Install the Nvidia/AMD drivers now
+1. Click **Add**
+1. Start the virtual machine
+1. Using the VNC console, install the Nvidia/AMD drivers now
 1. Shut down the virtual machine ⏹️
 
 #### Remove unneeded devices
 
-In virt-manager, remove the following devices that we no longer need:
+In the Cockpit web UI virtual machine settings, you can now remove the `cdrom` 'Disk'.
 
-- SATA CDROM1
-- Display Spice
-- Channel spice
-- Video QXL
-- Tablet
-- Serial 1
-- USB Redirector 1
-- USB Redirector 2
-- Virtio Serial Controller
+You can also connect to the VM using Parsec and disable the primary second display used by the VNC viewer.
 
 ### Final steps
 
@@ -451,16 +403,10 @@ We assume you have **the same prequisites and configuration** from [Part 1](#par
 
 #### Windows 10 VM
 
-1. Log in your server over SSH with X11 and run the `virt-manager` UI:
-
-    ```sh
-    virt-manager --no-fork
-    ```
-
-    And wait a few seconds for the GUI to show.
-1. Shutdown the Windows 10 virtual machine (right click on *win10*, *Shut down*, *Shut down*)
-1. Double click on *win10* and click on the 💡 icon to show hardware details
-1. Remove each of the PCI devices of the card you want to remove. In my case I had to select and click on *Remove* for each of these:
+1. Log in to your Cockpit web UI at [https://192.168.1.2:9090](https://192.168.1.2:9090)
+1. Shutdown the Windows 10 virtual machine
+1. Click on *win10* and head to the **Host devices** section.
+1. Remove each of the host PCI devices of the card you want to remove. In my case I had to click on *Remove* for each of these:
     - `PCI 0000:08:00.0`
     - `PCI 0000:08:00.1`
     - `PCI 0000:08:00.2`
@@ -514,7 +460,7 @@ Find the group your new GPU belongs to.
         done;
     done;
     ```
-
+It should be trivial to spot all devices of NVIDIA corporation for example. 
 1. Run it
 
     ```sh
@@ -604,24 +550,14 @@ We need to bind all devices of the IOMMU Group `16` to the VFIO PCI driver at bo
             Kernel modules: nouveau
     ```
 
-## Modify the virtual machine definitions
+### Modify the virtual machine definitions
 
-1. Log in your server over SSH with X11 enabled and run the `virt-manager` UI:
-
-    ```sh
-    virt-manager --no-fork
-    ```
-
-    And wait a few seconds for the GUI to show.
-1. Double click on *win10*
-1. Click on the 💡 icon to show hardware details
-1. For each of the PCI devices in the IOMMU group you want to add:
-    1. Click on *Add Hardware*
-    1. Click on *PCI Host Device*
-    1. Select the device and click on *Finish* (example: `0000:08:00:0 NVIDIA Corporation`).
-1. Plug a screen on your graphics card 📺 🔌
+1. Go to the cockpit web UI at [https://192.168.1.2:9090](https://192.168.1.2:9090)
+1. Click on the virtual machine *win10* [https://192.168.1.2:9090/machines#vm?name=win10](https://192.168.1.2:9090/machines#vm?name=win10)
+1. Click on the **Add host device** button in the *Host devices* section
+1. Select **PCI** and tick all the devices related to the graphics card you want to add. If you want to ensure these are the right ones, compare their hardware ID on the rightmost column with the ones you got earlier in the IOMMU group.
 1. Start the virtual machine ⏯️
-1. You can now connect to it using Parsec as before, and... profit 🎉 🎆 🎉
+1. You can now connect to it using Parsec as before, and... profit again! 🎉 🎆 🎉
 
 ## References
 
@@ -631,7 +567,7 @@ We need to bind all devices of the IOMMU Group `16` to the VFIO PCI driver at bo
 
 ## Further work
 
-Automate the setup with `virsh` to avoid relying on the `virt-manager` GUI. For example:
+Automate the setup with `virsh` to avoid relying on the Cockpit web UI. For example:
 
 ```sh
 virt-install -n gaming \
