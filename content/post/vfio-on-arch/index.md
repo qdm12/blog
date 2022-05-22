@@ -237,7 +237,7 @@ We need to bind all devices of the IOMMU Group `15` to the VFIO PCI driver at bo
 1. Install necessary packages
 
     ```sh
-    pacman -Sy --no-confirm qemu libvirt virt-install edk2-ovmf dnsmasq
+    pacman -Sy --noconfirm qemu libvirt virt-install edk2-ovmf dnsmasq
     ```
 
     - `qemu` is the  machine emulator and virtualizer
@@ -266,7 +266,7 @@ We will setup the Cockpit Web user interface (by RedHat), which is quite better 
 1. Install required packages
 
     ```sh
-    pacman -S cockpit cockpit-machines udisks2-qt5 packagekit
+    pacman -Sy --noconfirm cockpit cockpit-machines udisks2-qt5 packagekit
     ```
 
 1. Enable and run the cockpit service
@@ -305,11 +305,8 @@ Then click on the VM name, here it's `win10`, to show a more detailed menu. This
 - Edit the number of vCPUs from `2` to another number if you want. Ideally set the same amount of threads per core your CPU has physically (usually 2 per core).
 - Edit the CPU type to `host-passthrough`
 - Edit the firmware from `BIOS` to `UEFI`
-- Change the boot order to have the `cdrom` of your ISO before the disk. I personally I had the bug I had to click Install, then force shut down in order for the disc drive to appear in the boot order.
 
-    ![win10 Boot order](bootorder.jpg)
-
-Click on **Install** at the top.
+Click on **Install** at the top. That will boot from the ISO file you selected earlier.
 
 A VNC console screen will appear on the right hand side, click on it and press a key to boot from the ISO file.
 
@@ -323,7 +320,7 @@ Once you are done setting up Windows 10, in the virtual machine:
 1. Download the Nvidia/AMD drivers for your graphics card but **do not** install it yet.
 1. Download and install [Parsec](https://parsecgaming.com/) as a machine level installation.
 1. Log in to your Parsec account.
-1. **Configure Parsec to start with Windows** 
+1. **Configure Parsec to start with Windows**
 1. Shut down the virtual machine.
 
 #### Hide the VM
@@ -363,6 +360,13 @@ All the following modifications have to be done in the block
     ```xml
     <vendor_id state='on' value='123412341234'/>
     ```
+
+### The DUMMY PLUG
+
+You will likely need to plug a cable in your graphics card in order to use it, for example with Parsec.
+To do so, you can either plug an actual screen or you can buy a 'HDMI Dummy Plug' and plug it (what I use).
+
+![HDMI dummy plug](hdmidummyplug.jpg)
 
 #### Add the Graphics card
 
@@ -460,7 +464,9 @@ Find the group your new GPU belongs to.
         done;
     done;
     ```
-It should be trivial to spot all devices of NVIDIA corporation for example. 
+
+    It should be trivial to spot all devices of NVIDIA corporation for example.
+
 1. Run it
 
     ```sh
