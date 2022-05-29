@@ -190,8 +190,6 @@ func main() {
 
 ## Conclusion
 
-I hope this gave you a good overview of how and why you should adopt the application and library Go project structure.
-
-If you have any recommendation, feel free to contact me though!
-
-Have a good maintainability! 🌞
+Global variables are bad. But a necessary evil for sentinel errors
+There are use cases for immutable variables (like regex) where it makes sense to use as well.
+But otherwise, don't use them 😉
