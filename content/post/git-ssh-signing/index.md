@@ -54,10 +54,12 @@ Since SSH signing doesn't have a trust chain like GPG, you need to specify pairs
 You can now try it out with `git log`, for example I get:
 
 ```log
-commit 660b85e370c72621529e1986ca67e0219cfbae27 (HEAD -> git-ssh-signing)
+commit a722cc24aba747fd64baec9001ea95ed0da15a26 (HEAD -> git-ssh-signing)
 Good "git" signature for quentin.mcgaw@gmail.com with ED25519 key SHA256:91Q6hhzy9OpcGGZd0SfLX+vfWUxQ9KLVeUWRRDqvYfE
 Author: Quentin McGaw <quentin.mcgaw@gmail.com>
-Date:   Sun Aug 28 20:53:00 2022 -0400
+Date:   Sun Aug 28 20:56:35 2022 -0400
+
+    Post: Signing Git commits with SSH and Github
 ```
 
 ## Github
@@ -69,3 +71,5 @@ Mine is `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAII9/8+UQc7dAUIVgldXZH3oFxT0QdF6TWUs
 1. Go to [https://github.com/settings/ssh/new](https://github.com/settings/ssh/new) and add your SSH public key as **signing key**
 
 Now your signed commits will show with the *verified* badge!
+
+![Github commit verified badge](github-verified.jpg)
