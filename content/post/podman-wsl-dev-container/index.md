@@ -118,7 +118,7 @@ sudo apt-get install -y docker-compose
 
 You may need to set it in VSCode user settings with `"dev.containers.dockerComposePath": "/usr/bin/docker-compose"`.
 
-### Testing it out
+## Testing it out
 
 Download [devtainr](https://github.com/qdm12/devtainr) to setup a development container `.devcontainer` directory.
 
@@ -138,7 +138,7 @@ code .
 
 Then open the VSCode command palette and choose **Dev Containers: Open Folder in Container...** and pick `~/test`.
 
-### Watch out for
+## Watch out for
 
 - Even if your dev container runs as root, the files must be owned by the non root user of WSL, since root within the container is not root on WSL Ubuntu.
 - If you enable or start the socket with `sudo`, it creates a root Podman socket, not a rootless Podman socket.
