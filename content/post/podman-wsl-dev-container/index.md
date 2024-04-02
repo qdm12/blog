@@ -76,15 +76,21 @@ systemd=true
 
 Exit WSL, shut it down with `wsl --shutdown`, and restart it with `wsl`.
 
-Now enable and start the Podman socket with:
+Now copy the systemd unit files to your user directory with:
+
+```sh
+mkdir -p ~/.config/systemd/user/
+cp /usr/lib/systemd/user/podman.service ~/.config/systemd/user/podman.service
+cp /usr/lib/systemd/user/podman.socket ~/.config/systemd/user/podman.socket
+```
+
+And then enable and start the Podman socket with:
 
 ```sh
 systemctl --user enable --now podman.socket
 ```
 
 ⚠️ Make sure to run this without `sudo` to have a rootless Podman socket.
-
-⚠️ In case this doesn't work, you may have to fiddle with `~/.config/systemd/user/`.
 
 This should start a Podman socket and you can check it's there with:
 
